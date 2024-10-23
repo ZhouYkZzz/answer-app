@@ -1,0 +1,72 @@
+
+.container.data-v-1cf27b2a {
+  padding: 20rpx;
+}
+.header.data-v-1cf27b2a {
+  text-align: center;
+  padding: 20rpx 0;
+}
+.title.data-v-1cf27b2a {
+  font-size: 36rpx;
+  font-weight: bold;
+}
+.tab-navigation.data-v-1cf27b2a {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20rpx;
+}
+.tab-item.data-v-1cf27b2a {
+  padding: 10rpx;
+  font-size: 30rpx;
+  cursor: pointer;
+}
+.tab-item.active.data-v-1cf27b2a {
+  border-bottom: 3rpx solid #42b983;
+  color: #42b983;
+}
+.content.data-v-1cf27b2a {
+  margin-top: 40rpx;
+}
+.market-list.data-v-1cf27b2a {
+  display: flex;
+  flex-direction: column;
+}
+.market-item.data-v-1cf27b2a {
+  padding: 20rpx;
+  margin-bottom: 20rpx;
+  border: 1rpx solid #ccc;
+  border-radius: 10rpx;
+}
+.market-title.data-v-1cf27b2a {
+  font-size: 32rpx;
+  font-weight: bold;
+}
+.market-desc.data-v-1cf27b2a {
+  margin-top: 10rpx;
+  color: #666;
+}
+.btn.data-v-1cf27b2a {
+  margin-top: 20rpx;
+  background-color: #42b983;
+  color: #fff;
+  padding: 10rpx 20rpx;
+  border: none;
+  border-radius: 5rpx;
+}
+.add-bank-btn.data-v-1cf27b2a {
+  margin-top: 30rpx;
+  background-color: #007aff;
+  color: #fff;
+  padding: 15rpx;
+  text-align: center;
+  border-radius: 10rpx;
+}
+.start-btn.data-v-1cf27b2a {
+  width: 100%;
+  text-align: center;
+}
+.quiz-title.data-v-1cf27b2a {
+  font-size: 32rpx;
+  text-align: center;
+  margin-bottom: 20rpx;
+}
