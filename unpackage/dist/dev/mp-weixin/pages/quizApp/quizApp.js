@@ -25,8 +25,8 @@ const _sfc_main = {
     },
     startQuiz() {
       common_vendor.index.navigateTo({
-        url: `/pages/quizQuestionPage/quizQuestionPage}`
-        //?bankName=${this.selectedBank.name
+        url: `/pages/quizQuestionPage/quizQuestionPage?bankName=${this.selectedBank.name}`
+        //
       });
     },
     addBank() {

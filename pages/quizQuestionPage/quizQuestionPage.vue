@@ -7,12 +7,14 @@
 
     <!-- Quiz Question Content -->
     <view class="question-content">
-      <text class="question">[1] The headmaster hurried to the concert hall only _________ the speaker</text>
+      <text class="question">{{ currentQuestion.text }}</text>
       <view class="options">
-        <view class="option" v-for="(option, index) in options" :key="index" @click="selectOption(index)">
-          <text :class="['option-text', selectedOption === index ? 'selected' : '']">
-            {{ option.label }}. {{ option.text }}
-          </text>
+        <view class="option" v-for="(option, index) in currentQuestion.options" :key="index" @click="selectOption(index)" :class="['option-box', selectedOption === index ? 'selected-option' : '', showExplanation && selectedOption === index ? (isCorrect(index) ? 'correct' : 'incorrect') : '']">
+          <view class="option-frame">
+            <text class="option-text">
+              {{ option.label }}. {{ option.text }}
+            </text>
+          </view>
         </view>
       </view>
       <button v-if="selectedOption !== null" class="btn submit-btn" @click="submitAnswer">提交答案</button>
@@ -21,8 +23,15 @@
     <!-- Explanation Section -->
     <view v-if="showExplanation" class="explanation">
       <text class="explanation-title">答案解析</text>
-      <text class="correct-answer">正确答案: {{ correctAnswer.label }}</text>
-      <text class="explanation-text">{{ correctAnswer.explanation }}</text>
+      <text class="correct-answer">正确答案: {{ currentQuestion.correctAnswer }}</text>
+      <text class="explanation-text">{{ currentQuestion.explanation }}</text>
+    </view>
+
+    <!-- Navigation and Favorite Buttons -->
+    <view class="navigation-buttons">
+      <button class="btn nav-btn" @click="previousQuestion" :disabled="currentIndex === 0">上一题</button>
+      <button class="btn nav-btn" @click="nextQuestion" :disabled="currentIndex === questions.length - 1">下一题</button>
+      <button class="btn favorite-btn" :class="{ favorited: isFavorited }" @click="toggleFavorite">收藏</button>
     </view>
   </view>
 </template>
@@ -31,19 +40,40 @@
 export default {
   data() {
     return {
-      options: [
-        { label: 'A', text: 'to find; left' },
-        { label: 'B', text: 'to find; gone' },
-        { label: 'C', text: 'finding; left' },
-        { label: 'D', text: 'finding; gone' }
-      ],
-      correctAnswer: {
-        label: 'B',
-        explanation: '[答案] B。不定式表结果时,常指出人意料的结果。第二个考察点是find+宾语+形容词(补语)，表状态。'
-      },
+      currentIndex: 0,
       selectedOption: null,
-      showExplanation: false
+      showExplanation: false,
+      isFavorited: false,
+      questions: [
+        {
+          text: '[1] The headmaster hurried to the concert hall only _________ the speaker.',
+          options: [
+            { label: 'A', text: 'to find' },
+            { label: 'B', text: 'finding' },
+            { label: 'C', text: 'found' },
+            { label: 'D', text: 'find' }
+          ],
+          correctAnswer: 'A',
+          explanation: '正确答案是A，因为这是一个不定式结构。'
+        },
+        {
+          text: '[2] —I failed again. I wish I _________ harder. —But you _________.',
+          options: [
+            { label: 'A', text: 'had worked; hadn’t' },
+            { label: 'B', text: 'worked; don’t' },
+            { label: 'C', text: 'had worked; didn’t' },
+            { label: 'D', text: 'worked; didn’t' }
+          ],
+          correctAnswer: 'C',
+          explanation: '第一空表达与过去事实相反的愿望,所以用过去完成时态表虚拟语气。第二空说明过去的事实,用一般过去时态。'
+        }
+      ]
     };
+  },
+  computed: {
+    currentQuestion() {
+      return this.questions[this.currentIndex];
+    }
   },
   methods: {
     selectOption(index) {
@@ -51,88 +81,84 @@ export default {
     },
     submitAnswer() {
       this.showExplanation = true;
-      if (this.options[this.selectedOption].label === this.correctAnswer.label) {
-        uni.showToast({
-          title: '回答正确',
-          icon: 'success'
-        });
-      } else {
-        uni.showToast({
-          title: '回答错误',
-          icon: 'none'
-        });
+    },
+    previousQuestion() {
+      if (this.currentIndex > 0) {
+        this.currentIndex--;
+        this.resetQuestionState();
       }
+    },
+    nextQuestion() {
+      if (this.currentIndex < this.questions.length - 1) {
+        this.currentIndex++;
+        this.resetQuestionState();
+      }
+    },
+    toggleFavorite() {
+      this.isFavorited = !this.isFavorited;
+    },
+    resetQuestionState() {
+      this.selectedOption = null;
+      this.showExplanation = false;
+      this.isFavorited = false;
+    },
+    isCorrect(index) {
+      return this.currentQuestion.options[index].label === this.currentQuestion.correctAnswer;
     }
   }
 };
 </script>
 
-<style scoped>
+<style>
 .container {
-  padding: 20rpx;
+  padding: 20px;
 }
 .header {
-  text-align: center;
-  padding: 20rpx 0;
-}
-.title {
-  font-size: 36rpx;
-  font-weight: bold;
+  margin-bottom: 20px;
 }
 .question-content {
-  margin-top: 40rpx;
-}
-.question {
-  font-size: 32rpx;
-  margin-bottom: 20rpx;
-}
-.options {
-  display: flex;
-  flex-direction: column;
+  margin-bottom: 20px;
 }
 .option {
-  padding: 20rpx;
-  margin-bottom: 20rpx;
-  border: 1rpx solid #ccc;
-  border-radius: 10rpx;
+  margin: 10px 0;
+}
+.option-box {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
   cursor: pointer;
 }
+.option-frame {
+  display: flex;
+  align-items: center;
+}
 .option-text {
-  font-size: 30rpx;
+  margin-left: 10px;
 }
-.option-text.selected {
-  color: #42b983;
+.selected {
   font-weight: bold;
 }
-.btn {
-  margin-top: 30rpx;
-  background-color: #42b983;
-  color: #fff;
-  padding: 15rpx;
-  border: none;
-  border-radius: 5rpx;
+.selected-option {
+  background-color: #e0f7e9; /* Light green to indicate the selected option */
 }
-.submit-btn {
-  width: 100%;
-  text-align: center;
+.correct {
+  color: green;
 }
-.explanation {
-  margin-top: 40rpx;
-  padding: 20rpx;
-  border-top: 1rpx solid #ccc;
+.incorrect {
+  color: red;
 }
-.explanation-title {
-  font-size: 32rpx;
-  font-weight: bold;
-  margin-bottom: 20rpx;
+.navigation-buttons {
+  margin-top: 20px;
 }
-.correct-answer {
-  font-size: 30rpx;
-  color: #42b983;
-  margin-bottom: 10rpx;
+.nav-btn {
+  margin-right: 10px;
 }
-.explanation-text {
-  font-size: 28rpx;
-  color: #666;
+.favorite-btn {
+  background-color: lightgray;
+}
+.favorited {
+  background-color: yellow;
 }
 </style>
