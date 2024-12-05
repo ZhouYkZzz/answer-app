@@ -7,12 +7,12 @@
 
     <!-- Quiz Question Content -->
     <view class="question-content">
-      <text class="question">{{ currentQuestion.text }}</text>
+      <text class="question">{{ currentQuestion.content }}</text>
       <view class="options">
-        <view class="option" v-for="(option, index) in currentQuestion.options" :key="index" @click="selectOption(index)" :class="['option-box', selectedOption === index ? 'selected-option' : '', showExplanation && selectedOption === index ? (isCorrect(index) ? 'correct' : 'incorrect') : '']">
+        <view class="option" v-for="(option, index) in currentQuestion.options" :key="index" @click="selectOption(index)" :class="['option-box', selectedOption === index ? 'selected-option' : '', showExplanation && selectedOption === index ? (isCorrect(index) ? 'correct' : 'incorrect') : '']" :disabled="showExplanation">
           <view class="option-frame">
             <text class="option-text">
-              {{ option.label }}. {{ option.text }}
+              {{ option.name }}. {{ option.content }}
             </text>
           </view>
         </view>
@@ -44,43 +44,131 @@ export default {
       selectedOption: null,
       showExplanation: false,
       isFavorited: false,
-      questions: [
-        {
-          text: '[1] The headmaster hurried to the concert hall only _________ the speaker.',
-          options: [
-            { label: 'A', text: 'to find' },
-            { label: 'B', text: 'finding' },
-            { label: 'C', text: 'found' },
-            { label: 'D', text: 'find' }
-          ],
-          correctAnswer: 'A',
-          explanation: '正确答案是A，因为这是一个不定式结构。'
-        },
-        {
-          text: '[2] —I failed again. I wish I _________ harder. —But you _________.',
-          options: [
-            { label: 'A', text: 'had worked; hadn’t' },
-            { label: 'B', text: 'worked; don’t' },
-            { label: 'C', text: 'had worked; didn’t' },
-            { label: 'D', text: 'worked; didn’t' }
-          ],
-          correctAnswer: 'C',
-          explanation: '第一空表达与过去事实相反的愿望,所以用过去完成时态表虚拟语气。第二空说明过去的事实,用一般过去时态。'
-        }
-      ]
+      questions: []
     };
   },
   computed: {
     currentQuestion() {
-      return this.questions[this.currentIndex];
+      return this.questions[this.currentIndex] || {};
+    }
+  },
+  mounted() {
+    this.printCurrentPageUrl(); // 在页面加载时输出 URL
+    const source = this.getSourceFromUrl();
+    console.log('Source:', source); // 输出 source 到控制台
+    this.printCurrentPageUrl(); // 在页面加载时输出 URL
+        console.log('Source:', source); // 输出 source 到控制台
+    this.printCurrentPageUrl(); // 在页面加载时输出 URL
+    const bankId = this.getBankIdFromUrl();
+        if (bankId) {
+      this.fetchQuestions(bankId, source);
+    } else {
+      console.error('Bank ID is missing from the URL.');
     }
   },
   methods: {
-    selectOption(index) {
-      this.selectedOption = index;
+    getBankIdFromUrl() {
+      // 从URL中获取bankId
+      const pages = getCurrentPages();
+      const currentPage = pages[pages.length - 1];
+      if (currentPage && currentPage.options) {
+        return currentPage.options.bankId;
+      } else {
+        console.error('Unable to retrieve bankId from the URL.');
+        return null;
+      }
     },
-    submitAnswer() {
+    getSourceFromUrl() {
+      // 从URL中获取source
+      const pages = getCurrentPages();
+      const currentPage = pages[pages.length - 1];
+      if (currentPage && currentPage.options) {
+        return currentPage.options.source;
+      } else {
+        console.error('Unable to retrieve source from the URL.');
+        return null;
+      }
+    },
+    async fetchQuestions(bankId, source) {
+      try {
+        uni.getStorage({
+          key: 'userToken',
+          success: (res) => {
+            const token = res.data;
+            const url = source === 'quiz' ? 'http://116.62.5.195:8081/user/question/wrong' : 'http://116.62.5.195:8081/user/question';
+            uni.request({
+              url: url,
+              method: 'GET',
+              header: {
+                Authorization: `${token}`
+              },
+              data: {
+                bankId: source === 'quiz' ? bankId || '' : bankId
+              },
+              success: (response) => {
+                if (response.data.code === 0) {
+                  this.questions = response.data.data;
+                } else {
+                  console.error('Failed to fetch questions:', response.data.msg);
+                }
+              },
+              fail: (err) => {
+                console.error('Error fetching questions:', err);
+              }
+            });
+          },
+          fail: (err) => {
+            console.error('Failed to get token from storage:', err);
+          }
+        });
+      } catch (error) {
+        console.error('Error fetching questions:', error);
+      }
+    },
+    selectOption(index) {
+      if (!this.showExplanation) {
+        this.selectedOption = index;
+      }
+    },
+    async submitAnswer() {
       this.showExplanation = true;
+      try {
+        uni.getStorage({
+          key: 'userToken',
+          success: (res) => {
+            const token = res.data;
+            uni.request({
+              url: `http://116.62.5.195:8081/user/record/question/${this.currentQuestion.id}`,
+              method: 'POST',
+              header: {
+                Authorization: `${token}`
+              },
+              data: {
+                answer: [this.currentQuestion.options[this.selectedOption].name]
+              },
+              success: (response) => {
+                if (response.data.code === 0) {
+                  const { isCorrect, answer } = response.data.data;
+                  this.currentQuestion.correctAnswer = answer.join(', ');
+                  if (!this.currentQuestion.explanation) {
+                    this.currentQuestion.explanation = isCorrect ? '回答正确！' : '回答错误，请查看正确答案。';
+                  }
+                } else {
+                  console.error('Failed to submit answer:', response.data.msg);
+                }
+              },
+              fail: (err) => {
+                console.error('Error submitting answer:', err);
+              }
+            });
+          },
+          fail: (err) => {
+            console.error('Failed to get token from storage:', err);
+          }
+        });
+      } catch (error) {
+        console.error('Error submitting answer:', error);
+      }
     },
     previousQuestion() {
       if (this.currentIndex > 0) {
@@ -103,7 +191,15 @@ export default {
       this.isFavorited = false;
     },
     isCorrect(index) {
-      return this.currentQuestion.options[index].label === this.currentQuestion.correctAnswer;
+      return this.currentQuestion.options[index].name === this.currentQuestion.correctAnswer;
+    },
+    printCurrentPageUrl() {
+      const pages = getCurrentPages();
+      const currentPage = pages[pages.length - 1];
+      const url = currentPage.route;
+      const options = currentPage.options;
+      console.log('Current page URL:', url);
+      console.log('Current page options:', options);
     }
   }
 };

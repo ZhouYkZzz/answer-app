@@ -11,7 +11,7 @@
         <text>题库市场</text>
       </view>
       <view :class="['tab-item', activeTab === 'quiz' ? 'active' : '']" @click="changeTab('quiz')">
-        <text>开始答题</text>
+        <text>错题集</text>
       </view>
     </view>
 
@@ -22,21 +22,18 @@
         <view class="market-list">
           <view class="market-item" v-for="(item, index) in questionBanks" :key="index">
             <text class="market-title">{{ item.name }}</text>
-            <text class="market-desc">{{ item.description }}</text>
-            <button class="btn" @click="selectBank(item)">选择题库</button>
+            <button class="btn" @click="startQuiz(item)">选择题库</button>
           </view>
-          <button class="btn add-bank-btn" @click="addBank">添加题库</button>
         </view>
       </view>
 
       <view v-if="activeTab === 'quiz'">
-        <!-- Quiz Start Page -->
-        <view v-if="selectedBank">
-          <text class="quiz-title">正在使用题库: {{ selectedBank.name }}</text>
-          <button class="btn start-btn" @click="startQuiz">开始答题</button>
-        </view>
-        <view v-else>
-          <text class="quiz-title">请先选择题库</text>
+        <!-- Quiz Collection Page -->
+        <view class="market-list">
+          <view class="market-item" v-for="(item, index) in questionBanks" :key="index">
+            <text class="market-title">{{ item.name }}</text>
+            <button class="btn" @click="startQuiz(item)">选择题库</button>
+          </view>
         </view>
       </view>
     </view>
@@ -44,57 +41,71 @@
 </template>
 
 <script>
+import { onMounted, ref } from 'vue';
+
 export default {
-  data() {
-    return {
-      activeTab: 'market',
-      questionBanks: [
-        { name: '数学题库', description: '包含初中和高中数学题目' },
-        { name: '英语题库', description: '包含各种英语语法和词汇题目' },
-        { name: '历史题库', description: '包含中国和世界历史题目' }
-      ],
-      selectedBank: null
+  setup() {
+    const activeTab = ref('market');
+    const questionBanks = ref([]);
+    const selectedBank = ref(null);
+
+    // Method to change active tab
+    const changeTab = (tab) => {
+      activeTab.value = tab;
     };
-  },
-  methods: {
-    changeTab(tab) {
-      this.activeTab = tab;
-    },
-    selectBank(bank) {
-      this.selectedBank = bank;
-      uni.showToast({
-        title: `已选择 ${bank.name}`,
-        icon: 'success'
-      });
-    },
-    startQuiz() {
-      uni.navigateTo({
-        url: `/pages/quizQuestionPage/quizQuestionPage?bankName=${this.selectedBank.name}`//
-      });
-    },
-    addBank() {
-      uni.prompt({
-        title: '添加题库',
-        placeholder: '请输入题库名称和描述（用逗号分隔）',
-        success: (res) => {
-          if (res.confirm && res.content) {
-            const [name, description] = res.content.split(',');
-            if (name && description) {
-              this.questionBanks.push({ name: name.trim(), description: description.trim() });
-              uni.showToast({
-                title: '题库添加成功',
-                icon: 'success'
-              });
-            } else {
-              uni.showToast({
-                title: '输入格式有误',
-                icon: 'none'
-              });
-            }
+
+    // Fetch question banks from the backend
+    const fetchQuestionBanks = async () => {
+      try {
+        // 读取本地存储中的 userToken
+        uni.getStorage({
+          key: 'userToken',
+          success: async (res) => {
+            const token = res.data; // 获取 token
+
+            // 使用 token 发起请求
+            const response = await uni.request({
+              url: 'http://116.62.5.195:8081/user/bank',
+              method: 'GET',
+              header: {
+                'Authorization': `${token}`, // 这里添加 Authorization 头，可能需要和后端确认使用的格式
+                'Content-Type': 'application/json'  // 通常也可以加上 'Content-Type'
+              }
+            });
+
+            questionBanks.value = response.data.data; // 更新 questionBanks 的值
+          },
+          fail: (err) => {
+            console.error('Failed to get token from storage:', err);
           }
-        }
+        });
+      } catch (error) {
+        console.error('Error fetching question banks:', error);
+      }
+    };
+
+    // Lifecycle hook to fetch question banks when component is mounted
+    onMounted(() => {
+      fetchQuestionBanks();
+    });
+
+    // Method for starting quiz
+    const startQuiz = (bank) => {
+      const source = activeTab.value === 'market' ? 'market' : 'quiz';
+      const url = `/pages/quizQuestionPage/quizQuestionPage?bankId=${bank.id}&source=${source}`;
+      console.log('Navigating to URL:', url); // 输出 URL 到控制台
+      uni.navigateTo({
+        url: url
       });
-    }
+    };
+
+    return {
+      activeTab,
+      questionBanks,
+      selectedBank,
+      changeTab,
+      startQuiz
+    };
   }
 };
 </script>

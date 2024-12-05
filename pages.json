@@ -1,8 +1,9 @@
 {
 	"pages": [{
-		"path": "pages/quizApp/quizApp",
-		"style": {
-			"navigationBarTitleText": "题库市场"
+		"path" : "pages/login/login",
+		"style" : 
+		{
+			"navigationBarTitleText" : "登录页面"
 		}
 	},
 	{
@@ -11,7 +12,14 @@
 		{
 			"navigationBarTitleText" : "答题页面"
 		}
-	}],
+	},
+	{
+		"path": "pages/quizApp/quizApp",
+		"style": {
+			"navigationBarTitleText": "题库市场"
+		}
+	}
+],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "uni-app",

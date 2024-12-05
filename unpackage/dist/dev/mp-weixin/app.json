@@ -1,7 +1,8 @@
 {
   "pages": [
-    "pages/quizApp/quizApp",
-    "pages/quizQuestionPage/quizQuestionPage"
+    "pages/login/login",
+    "pages/quizQuestionPage/quizQuestionPage",
+    "pages/quizApp/quizApp"
   ],
   "window": {
     "navigationBarTextStyle": "black",

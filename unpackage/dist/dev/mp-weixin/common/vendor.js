@@ -7552,4 +7552,6 @@ exports.f = f;
 exports.index = index;
 exports.n = n;
 exports.o = o;
+exports.onMounted = onMounted;
+exports.ref = ref;
 exports.t = t;
